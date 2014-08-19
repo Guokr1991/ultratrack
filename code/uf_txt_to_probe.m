@@ -40,52 +40,21 @@ function [geometry]=uf_txt_to_probe(filename);
 %Comments may be inserted in the file in the matlab style (i.e. %=comment)
 %spaces, tabs and equal signs may all be used to seperate columns.  See the
 %case statement below for the parameter names 
-[pparam,pvalue]=textread(filename,'%s %s %*[^\n]','commentstyle','matlab','whitespace','= \b\t');
 % Deal with file-errors!!
 
-% load geometry structure with data
-for n=1:size(pparam,1),
-    switch lower(pparam{n})
-        case {'no_elements'} % Number of elements
-            geometry.no_elements = str2num(pvalue{n});
-        case {'no_elements_x'} % Number of elements
-            geometry.no_elements_x = str2num(pvalue{n});
-        case {'no_elements_y'} % Number of elements
-            geometry.no_elements_y = str2num(pvalue{n});
-        case {'height'} %element height (y direction) (meters)
-            geometry.height = str2num(pvalue{n});
-        case {'width'} %element width (x, lateral, direction) (meters)
-            geometry.width = str2num(pvalue{n});
-        case {'kerf'} %space between elements (meters)
-            geometry.kerf = str2num(pvalue{n});
-        case {'kerf_x'} %space between elements (meters)
-            geometry.kerf_x = str2num(pvalue{n});
-        case {'kerf_y'} %space between elements (meters)
-            geometry.kerf_y = str2num(pvalue{n});
-        case {'elv_focus'} %fixed elevation focus (meters)
-            geometry.elv_focus = str2num(pvalue{n});
-        case {'probe_type'} %linear, curvilinear, or phased
-            geometry.probe_type = lower(pvalue{n});
-        case {'image_mode'} %linear or phased
-            geometry.image_mode = lower(pvalue{n});
-        case {'convex_radius'}
-            geometry.convex_radius = str2num(pvalue{n});
-        case {'f0'} % Transducer center frequency, in Hertz
-            geometry.impulse_response.f0 = str2num(pvalue{n});
-        case {'bw'} % Bandwidth, in percent of center frequency
-            geometry.impulse_response.bw = str2num(pvalue{n});
-        case {'phase'} %Phase of carrier relative to envelope
-            geometry.impulse_response.phase = str2num(pvalue{n});
-        case {'wavetype'} %Envelope function for impulse response.  
-            geometry.impulse_response.wavetype=lower(pvalue{n});
-        case {'no_sub_x'} % Mathematical element subdivisions in x direction (see FieldII)
-            geometry.no_sub_x = str2num(pvalue{n});
-        case {'no_sub_y'} % Mathematical subdivisions in y direction
-            geometry.no_sub_y = str2num(pvalue{n});
-        otherwise % Announce and Ignore any other parameters
-            disp(['Unknown parameter "' pparam{n} '" in probe file ' filename ' ignored']);
-    end;
-end;
+% load geometry structure with json data
+fid = fopen(filename);
+
+% get text in json file into single string
+probeJson = '';
+line = fgetl(fid);
+while ischar(line)
+    probeJson = strcat(probeJson, line);
+    line = fgetl(fid);
+end
+
+% convert to matlab struct from json data
+geometry = fromjson(probeJson);
 
 if ~isfield(geometry,'no_elements_x') && isfield(geometry,'no_elements');
     geometry.no_elements_x = geometry.no_elements;
