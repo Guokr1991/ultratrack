@@ -61,6 +61,9 @@ if ischar(waveform)
         case 'impulse'
             t=0;
             pulse=1;        
+        case 'exp'
+            pulse = in.impulse_response.voltage';
+            t = in.impulse_response.time';
     end;
 end;
 
